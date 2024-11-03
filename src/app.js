@@ -1,26 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const Task = require('./models/task');
+
+dotenv.config();
 
 const app = express();
+app.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
 
 const uri = process.env.MONGODB_URI;
 
-mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-
-  const Task = mongoose.model('Task', new mongoose.Schema({
-    title: { type: String, required: true },
-    completed: { type: Boolean, default: false },
-  }));
+mongoose.connect(uri);
 
   app.post('/tasks', async (req, res) => {
     try {
       const task = new Task(req.body);
+      console.log(req.body);
       await task.save();
       res.status(201).send(task);
     } catch (error) {
@@ -52,6 +49,13 @@ mongoose.connect(uri, {
     }
   });
 
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  mongoose.connect(uri)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to connect to MongoDB', error);
   });
